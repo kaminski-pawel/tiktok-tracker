@@ -16,3 +16,37 @@ The pre-commit hook at `.husky/pre-commit` runs:
 
 - `npm run lint`
 - `npm run typecheck`
+
+## Runtime Modes
+
+The tracker now supports two browser connection modes:
+
+- `managed-launch` (default): the tracker launches Chrome with remote debugging enabled.
+- `attach-to-existing` (advanced): the tracker connects to a Chrome instance you started manually.
+
+Use environment variables to configure behavior:
+
+- `TRACKER_RUNTIME_MODE`: `managed-launch` (default) or `attach-to-existing`.
+- `TRACKER_DEBUG_HOST`: DevTools host (default `127.0.0.1`).
+- `TRACKER_DEBUG_PORT`: DevTools port (default `9222`).
+- `TRACKER_LAUNCH_TIMEOUT_MS`: startup/attach timeout in milliseconds (default `15000`).
+- `TRACKER_LAUNCH_URL`: initial URL when using managed launch (default `https://www.tiktok.com/`).
+- `TRACKER_CHROME_PATH`: optional explicit Chrome/Chromium executable path.
+- `TRACKER_CHROME_USER_DATA_DIR`: optional user data directory for managed launch.
+
+WSL2 development note:
+
+- This project targets Windows and macOS operators.
+- When running from WSL2, managed launch can use Windows Chrome (for example `/mnt/c/Program Files/Google/Chrome/Application/chrome.exe`).
+- If `TRACKER_CHROME_PATH` uses a Windows-style path (for example `C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe`), the runtime normalizes it for WSL.
+- Managed launch in WSL uses a Windows-accessible profile directory and WSL-reachable DevTools host handling automatically.
+
+Examples:
+
+```bash
+# Default managed launch
+npm run build && node dist/index.js
+
+# Advanced attach mode (Chrome must already expose --remote-debugging-port=9222)
+TRACKER_RUNTIME_MODE=attach-to-existing npm run build && node dist/index.js
+```
