@@ -111,7 +111,7 @@ async function waitForDevToolsActivePort(
     userDataDir: string,
     timeoutMs: number,
     host: string
-): Promise<{ baseUrl: string; webSocketDebuggerUrl: string }> {
+): Promise<{ baseUrl: string; port: number; webSocketPath: string }> {
     const startedAt = Date.now();
     const activePortFilePath = join(userDataDir, "DevToolsActivePort");
     let lastError: unknown;
@@ -132,13 +132,11 @@ async function waitForDevToolsActivePort(
             }
 
             const baseUrl = `http://${host}:${port}`;
-            const webSocketDebuggerUrl = webSocketPath.startsWith("ws://")
-                ? webSocketPath
-                : `ws://${host}:${port}${webSocketPath.startsWith("/") ? webSocketPath : `/${webSocketPath}`}`;
 
             return {
                 baseUrl,
-                webSocketDebuggerUrl
+                port,
+                webSocketPath
             };
         } catch (error: unknown) {
             lastError = error;
@@ -151,6 +149,61 @@ async function waitForDevToolsActivePort(
 
     const reason = lastError instanceof Error ? lastError.message : String(lastError);
     throw new Error(`Timed out waiting for DevToolsActivePort: ${reason}`);
+}
+
+function buildWebSocketDebuggerUrl(host: string, port: number, webSocketPath: string): string {
+    if (webSocketPath.startsWith("ws://") || webSocketPath.startsWith("wss://")) {
+        try {
+            const parsedUrl = new URL(webSocketPath);
+            parsedUrl.hostname = host;
+            parsedUrl.port = String(port);
+            return parsedUrl.toString();
+        } catch {
+            return webSocketPath;
+        }
+    }
+
+    return `ws://${host}:${port}${webSocketPath.startsWith("/") ? webSocketPath : `/${webSocketPath}`}`;
+}
+
+async function resolveReachableManagedDevToolsEndpoint(
+    preferredHost: string,
+    port: number,
+    webSocketPath: string,
+    launchTimeoutMs: number
+): Promise<{ baseUrl: string; webSocketDebuggerUrl: string }> {
+    const hostCandidates = [preferredHost, "127.0.0.1", "localhost"].filter(
+        (value, index, arr) => arr.indexOf(value) === index
+    );
+
+    let lastError: unknown;
+    for (const host of hostCandidates) {
+        const baseUrl = `http://${host}:${port}`;
+        try {
+            const version = await waitForDevTools(baseUrl, Math.min(launchTimeoutMs, 2_000));
+            return {
+                baseUrl,
+                webSocketDebuggerUrl: version.webSocketDebuggerUrl
+            };
+        } catch (error: unknown) {
+            lastError = error;
+
+            // If /json/version is unreachable for a host candidate, still keep a fallback URL for later websocket use.
+            if (host === preferredHost) {
+                continue;
+            }
+        }
+    }
+
+    if (lastError !== undefined) {
+        const reason = lastError instanceof Error ? lastError.message : String(lastError);
+        process.stderr.write(`Falling back to inferred DevTools host after probe failure: ${reason}\n`);
+    }
+
+    return {
+        baseUrl: `http://${preferredHost}:${port}`,
+        webSocketDebuggerUrl: buildWebSocketDebuggerUrl(preferredHost, port, webSocketPath)
+    };
 }
 
 async function resolveManagedLaunchHost(chromePath: string): Promise<string> {
@@ -262,7 +315,7 @@ async function launchManagedChrome(config: RuntimeConfig): Promise<ChromeSession
         throw new Error("Chrome process started without a pid.");
     }
 
-    const version = await Promise.race([
+    const activePort = await Promise.race([
         waitForDevToolsActivePort(userDataDir.localPath, config.launchTimeoutMs, devToolsHost),
         new Promise<never>((_, reject) => {
             chromeProcess.once("exit", (code: number | null, signal: NodeJS.Signals | null) => {
@@ -274,6 +327,13 @@ async function launchManagedChrome(config: RuntimeConfig): Promise<ChromeSession
             });
         })
     ]);
+
+    const version = await resolveReachableManagedDevToolsEndpoint(
+        devToolsHost,
+        activePort.port,
+        activePort.webSocketPath,
+        config.launchTimeoutMs
+    );
 
     return {
         mode: "managed-launch",

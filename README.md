@@ -33,6 +33,11 @@ Use environment variables to configure behavior:
 - `TRACKER_LAUNCH_URL`: initial URL when using managed launch (default `https://www.tiktok.com/`).
 - `TRACKER_CHROME_PATH`: optional explicit Chrome/Chromium executable path.
 - `TRACKER_CHROME_USER_DATA_DIR`: optional user data directory for managed launch.
+- `TRACKER_ENDPOINT_RECOMMEND_ITEM_LIST_ENABLED`: enable capture for `/api/recommend/item_list` (default `true`).
+- `TRACKER_ENDPOINT_PREFETCH_EXPLORE_ITEM_LIST_ENABLED`: enable capture for `/api/prefetch/explore/item_list` (default `false`).
+- `TRACKER_ENDPOINT_PRELOAD_ITEM_LIST_ENABLED`: enable capture for `/api/preload/item_list` (default `false`).
+
+By default, only `/api/recommend/item_list` is captured.
 
 WSL2 development note:
 
@@ -49,4 +54,9 @@ npm run build && node dist/index.js
 
 # Advanced attach mode (Chrome must already expose --remote-debugging-port=9222)
 TRACKER_RUNTIME_MODE=attach-to-existing npm run build && node dist/index.js
+
+# Optional endpoint toggles
+TRACKER_ENDPOINT_PREFETCH_EXPLORE_ITEM_LIST_ENABLED=true \
+TRACKER_ENDPOINT_PRELOAD_ITEM_LIST_ENABLED=true \
+npm run build && node dist/index.js
 ```

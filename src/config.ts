@@ -1,11 +1,21 @@
 export type RuntimeMode = "managed-launch" | "attach-to-existing";
 
+export const RECOMMEND_ITEM_LIST_ENDPOINT = "/api/recommend/item_list";
+export const PREFETCH_EXPLORE_ITEM_LIST_ENDPOINT = "/api/prefetch/explore/item_list";
+export const PRELOAD_ITEM_LIST_ENDPOINT = "/api/preload/item_list";
+
+export type EndpointPath =
+    | typeof RECOMMEND_ITEM_LIST_ENDPOINT
+    | typeof PREFETCH_EXPLORE_ITEM_LIST_ENDPOINT
+    | typeof PRELOAD_ITEM_LIST_ENDPOINT;
+
 export interface RuntimeConfig {
     mode: RuntimeMode;
     debugHost: string;
     debugPort: number;
     launchUrl: string;
     launchTimeoutMs: number;
+    enabledEndpointPaths: EndpointPath[];
     chromePath?: string;
     chromeUserDataDir?: string;
 }
@@ -43,6 +53,56 @@ function parseRuntimeMode(value: string | undefined): RuntimeMode {
     throw new Error(
         `Invalid TRACKER_RUNTIME_MODE: ${value}. Use managed-launch or attach-to-existing.`
     );
+}
+
+function parseBoolean(value: string | undefined, fallback: boolean): boolean {
+    if (value === undefined || value.trim() === "") {
+        return fallback;
+    }
+
+    const normalized = value.trim().toLowerCase();
+    if (normalized === "1" || normalized === "true" || normalized === "yes" || normalized === "on") {
+        return true;
+    }
+
+    if (normalized === "0" || normalized === "false" || normalized === "no" || normalized === "off") {
+        return false;
+    }
+
+    throw new Error(
+        `Expected a boolean value but got: ${value}. Use true/false, 1/0, yes/no, or on/off.`
+    );
+}
+
+function resolveEnabledEndpointPaths(env: NodeJS.ProcessEnv): EndpointPath[] {
+    const recommendEnabled = parseBoolean(env["TRACKER_ENDPOINT_RECOMMEND_ITEM_LIST_ENABLED"], true);
+    const prefetchExploreEnabled = parseBoolean(
+        env["TRACKER_ENDPOINT_PREFETCH_EXPLORE_ITEM_LIST_ENABLED"],
+        false
+    );
+    const preloadEnabled = parseBoolean(env["TRACKER_ENDPOINT_PRELOAD_ITEM_LIST_ENABLED"], false);
+
+    const enabledPaths: EndpointPath[] = [];
+    if (recommendEnabled) {
+        enabledPaths.push(RECOMMEND_ITEM_LIST_ENDPOINT);
+    }
+
+    if (prefetchExploreEnabled) {
+        enabledPaths.push(PREFETCH_EXPLORE_ITEM_LIST_ENDPOINT);
+    }
+
+    if (preloadEnabled) {
+        enabledPaths.push(PRELOAD_ITEM_LIST_ENDPOINT);
+    }
+
+    if (enabledPaths.length === 0) {
+        throw new Error(
+            "At least one capture endpoint must be enabled. " +
+            "Set TRACKER_ENDPOINT_RECOMMEND_ITEM_LIST_ENABLED=true or enable another endpoint toggle."
+        );
+    }
+
+    return enabledPaths;
 }
 
 function nonEmptyString(value: string | undefined): string | undefined {
@@ -102,6 +162,7 @@ export function loadRuntimeConfig(env: NodeJS.ProcessEnv): RuntimeConfig {
     const debugHost = nonEmptyString(env["TRACKER_DEBUG_HOST"]) ?? DEFAULT_DEBUG_HOST;
     const debugPort = parsePositiveInteger(env["TRACKER_DEBUG_PORT"], DEFAULT_DEBUG_PORT);
     const launchUrl = nonEmptyString(env["TRACKER_LAUNCH_URL"]) ?? DEFAULT_LAUNCH_URL;
+    const enabledEndpointPaths = resolveEnabledEndpointPaths(env);
     const launchTimeoutMs = parsePositiveInteger(
         env["TRACKER_LAUNCH_TIMEOUT_MS"],
         DEFAULT_LAUNCH_TIMEOUT_MS
@@ -119,6 +180,7 @@ export function loadRuntimeConfig(env: NodeJS.ProcessEnv): RuntimeConfig {
         debugHost,
         debugPort,
         launchUrl,
+        enabledEndpointPaths,
         launchTimeoutMs
     };
 
