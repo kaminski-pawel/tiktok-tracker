@@ -1,0 +1,31 @@
+{
+  "name": "tiktok-tracker",
+  "version": "1.0.0",
+  "description": "Manual-browse TikTok API response capture and CSV flattening tool",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test",
+    "prepare": "husky"
+  },
+  "keywords": [
+    "tiktok",
+    "tracker",
+    "typescript",
+    "cdp"
+  ],
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "@typescript-eslint/eslint-plugin": "^8.59.4",
+    "@typescript-eslint/parser": "^8.59.4",
+    "eslint": "^10.4.0",
+    "husky": "^9.1.7",
+    "typescript": "^6.0.3"
+  }
+}
