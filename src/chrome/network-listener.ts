@@ -73,6 +73,20 @@ interface MatchedRequestResponse {
     sessionId?: string;
 }
 
+export interface NetworkResponseLifecycleTracker {
+    handleEvent(event: JsonRpcEvent): Promise<void>;
+}
+
+interface NetworkResponseLifecycleTrackerDependencies {
+    enabledEndpointPaths: EndpointPath[];
+    onCapturedResponse: (response: CapturedResponse) => Promise<void> | void;
+    sendCommand: (
+        method: string,
+        params?: Record<string, unknown>,
+        sessionId?: string
+    ) => Promise<Record<string, unknown>>;
+}
+
 const CONNECT_RETRY_INTERVAL_MS = 250;
 const CONNECT_TIMEOUT_MS = 15_000;
 
@@ -241,6 +255,104 @@ function buildRequestKey(requestId: string, sessionId?: string): string {
 }
 
 /**
+ * Creates a tracker that matches response events to loading completion events,
+ * fetches response bodies once they are available, and forwards captured payloads.
+ *
+ * @param dependencies Tracker dependencies.
+ * @returns Lifecycle tracker for a single listener instance.
+ */
+export function createNetworkResponseLifecycleTracker(
+    dependencies: NetworkResponseLifecycleTrackerDependencies
+): NetworkResponseLifecycleTracker {
+    const matchedRequestResponses = new Map<string, MatchedRequestResponse>();
+
+    const handleNetworkResponseReceived = (event: JsonRpcEvent): void => {
+        const parsedEvent = parseNetworkResponseReceivedEvent(event);
+        if (parsedEvent === undefined) {
+            return;
+        }
+
+        const endpointPath = resolveEndpointPath(parsedEvent.response.url, dependencies.enabledEndpointPaths);
+        if (endpointPath === undefined) {
+            return;
+        }
+
+        const requestKey = buildRequestKey(parsedEvent.requestId, event.sessionId);
+        const matchedResponse: MatchedRequestResponse = {
+            endpointPath,
+            requestId: parsedEvent.requestId,
+            requestUrl: parsedEvent.response.url,
+            status: parsedEvent.response.status
+        };
+        if (event.sessionId !== undefined) {
+            matchedResponse.sessionId = event.sessionId;
+        }
+
+        matchedRequestResponses.set(requestKey, matchedResponse);
+    };
+
+    const handleNetworkLoadingFinished = async (event: JsonRpcEvent): Promise<void> => {
+        const parsedEvent = parseNetworkRequestLifecycleEvent(event);
+        if (parsedEvent === undefined) {
+            return;
+        }
+
+        const requestKey = buildRequestKey(parsedEvent.requestId, event.sessionId);
+        const matchedResponse = matchedRequestResponses.get(requestKey);
+        if (matchedResponse === undefined) {
+            return;
+        }
+
+        matchedRequestResponses.delete(requestKey);
+        const result = await dependencies.sendCommand(
+            "Network.getResponseBody",
+            { requestId: matchedResponse.requestId },
+            matchedResponse.sessionId
+        );
+        const parsedBody = parseGetResponseBodyResult(result);
+        if (parsedBody === undefined) {
+            return;
+        }
+
+        await dependencies.onCapturedResponse({
+            endpointPath: matchedResponse.endpointPath,
+            requestId: matchedResponse.requestId,
+            requestUrl: matchedResponse.requestUrl,
+            status: matchedResponse.status,
+            body: decodeResponseBody(parsedBody)
+        });
+    };
+
+    const handleNetworkLoadingFailed = (event: JsonRpcEvent): void => {
+        const parsedEvent = parseNetworkRequestLifecycleEvent(event);
+        if (parsedEvent === undefined) {
+            return;
+        }
+
+        const requestKey = buildRequestKey(parsedEvent.requestId, event.sessionId);
+        matchedRequestResponses.delete(requestKey);
+    };
+
+    return {
+        async handleEvent(event: JsonRpcEvent): Promise<void> {
+            if (event.method === "Network.responseReceived") {
+                handleNetworkResponseReceived(event);
+                return;
+            }
+
+            if (event.method === "Network.loadingFinished") {
+                await handleNetworkLoadingFinished(event);
+                return;
+            }
+
+            if (event.method === "Network.loadingFailed") {
+                handleNetworkLoadingFailed(event);
+            }
+        }
+    };
+}
+
+/**
  * Resolves which configured endpoint path matches a request URL.
  *
  * @param requestUrl Observed request URL.
@@ -389,8 +501,9 @@ function isRpcEvent(value: unknown): value is JsonRpcEvent {
  * Starts listening to Chrome DevTools network events and emits matched TikTok API responses.
  *
  * This function connects to the DevTools websocket, enables `Network` domain events
- * for page targets, captures `Network.responseReceived`, and fetches bodies for URLs
- * matching enabled endpoint paths.
+ * for page targets, captures `Network.responseReceived`, waits for
+ * `Network.loadingFinished`, and fetches bodies for URLs matching enabled
+ * endpoint paths.
  *
  * @param webSocketDebuggerUrl Chrome DevTools websocket URL.
  * @param enabledEndpointPaths Endpoint path filters to capture.
@@ -434,7 +547,6 @@ export async function startNetworkResponseListener(
 
     const pendingCommands = new Map<number, PendingCommand>();
     const pageSessionIds = new Set<string>();
-    const matchedRequestResponses = new Map<string, MatchedRequestResponse>();
     let commandId = 0;
 
     /**
@@ -470,6 +582,12 @@ export async function startNetworkResponseListener(
         return responsePromise;
     };
 
+    const tracker = createNetworkResponseLifecycleTracker({
+        enabledEndpointPaths,
+        onCapturedResponse,
+        sendCommand
+    });
+
     /**
      * Rejects all in-flight commands and clears pending command state.
      *
@@ -495,90 +613,6 @@ export async function startNetworkResponseListener(
 
         pageSessionIds.add(sessionId);
         await sendCommand("Network.enable", {}, sessionId);
-    };
-
-    /**
-     * Tracks matching `Network.responseReceived` events for later body retrieval
-     * on `Network.loadingFinished`.
-     *
-     * @param event CDP network event payload.
-     */
-    const handleNetworkResponseReceived = async (event: JsonRpcEvent): Promise<void> => {
-        const parsedEvent = parseNetworkResponseReceivedEvent(event);
-        if (parsedEvent === undefined) {
-            return;
-        }
-
-        const endpointPath = resolveEndpointPath(parsedEvent.response.url, enabledEndpointPaths);
-        if (endpointPath === undefined) {
-            return;
-        }
-
-        const requestKey = buildRequestKey(parsedEvent.requestId, event.sessionId);
-        const matchedResponse: MatchedRequestResponse = {
-            endpointPath,
-            requestId: parsedEvent.requestId,
-            requestUrl: parsedEvent.response.url,
-            status: parsedEvent.response.status
-        };
-        if (event.sessionId !== undefined) {
-            matchedResponse.sessionId = event.sessionId;
-        }
-
-        matchedRequestResponses.set(requestKey, matchedResponse);
-    };
-
-    /**
-     * Resolves a previously tracked matched response once `Network.loadingFinished`
-     * confirms the response body is available.
-     *
-     * @param event CDP network event payload.
-     */
-    const handleNetworkLoadingFinished = async (event: JsonRpcEvent): Promise<void> => {
-        const parsedEvent = parseNetworkRequestLifecycleEvent(event);
-        if (parsedEvent === undefined) {
-            return;
-        }
-
-        const requestKey = buildRequestKey(parsedEvent.requestId, event.sessionId);
-        const matchedResponse = matchedRequestResponses.get(requestKey);
-        if (matchedResponse === undefined) {
-            return;
-        }
-
-        matchedRequestResponses.delete(requestKey);
-        const result = await sendCommand(
-            "Network.getResponseBody",
-            { requestId: matchedResponse.requestId },
-            matchedResponse.sessionId
-        );
-        const parsedBody = parseGetResponseBodyResult(result);
-        if (parsedBody === undefined) {
-            return;
-        }
-
-        await onCapturedResponse({
-            endpointPath: matchedResponse.endpointPath,
-            requestId: matchedResponse.requestId,
-            requestUrl: matchedResponse.requestUrl,
-            status: matchedResponse.status,
-            body: decodeResponseBody(parsedBody)
-        });
-    };
-
-    /**
-     * Clears tracked match state when requests fail before body retrieval.
-     *
-     * @param event CDP network event payload.
-     */
-    const handleNetworkLoadingFailed = (event: JsonRpcEvent): void => {
-        const parsedEvent = parseNetworkRequestLifecycleEvent(event);
-        if (parsedEvent === undefined) {
-            return;
-        }
-
-        const requestKey = buildRequestKey(parsedEvent.requestId, event.sessionId);
-        matchedRequestResponses.delete(requestKey);
     };
 
     /**
@@ -622,30 +656,17 @@ export async function startNetworkResponseListener(
                 return;
             }
 
-            if (payload.method === "Network.responseReceived") {
+            if (
+                payload.method === "Network.responseReceived" ||
+                payload.method === "Network.loadingFinished" ||
+                payload.method === "Network.loadingFailed"
+            ) {
                 try {
-                    await handleNetworkResponseReceived(payload);
+                    await tracker.handleEvent(payload);
                 } catch (error: unknown) {
                     const messageText = error instanceof Error ? error.message : String(error);
-                    process.stderr.write(`Failed to process network response event: ${messageText}\n`);
+                    process.stderr.write(`Failed to process network event ${payload.method}: ${messageText}\n`);
                 }
-                return;
-            }
-
-            if (payload.method === "Network.loadingFinished") {
-                try {
-                    await handleNetworkLoadingFinished(payload);
-                } catch (error: unknown) {
-                    const messageText = error instanceof Error ? error.message : String(error);
-                    if (!messageText.includes("CDP -32000: No data found for resource with given identifier")) {
-                        process.stderr.write(`Failed to process network loading finished event: ${messageText}\n`);
-                    }
-                }
-                return;
-            }
-
-            if (payload.method === "Network.loadingFailed") {
-                handleNetworkLoadingFailed(payload);
             }
         })().catch((error: unknown) => {
             const messageText = error instanceof Error ? error.message : String(error);
