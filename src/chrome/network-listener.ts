@@ -64,10 +64,22 @@ interface GetResponseBodyResult {
 const CONNECT_RETRY_INTERVAL_MS = 250;
 const CONNECT_TIMEOUT_MS = 15_000;
 
+/**
+ * Checks whether a value is a non-null object record.
+ *
+ * @param value Value to validate.
+ * @returns True when the value is an object and not null.
+ */
 function isObject(value: unknown): value is Record<string, unknown> {
     return typeof value === "object" && value !== null;
 }
 
+/**
+ * Parses the `Target.getTargets` result into strongly typed target entries.
+ *
+ * @param result Raw CDP command result.
+ * @returns Parsed target list, or an empty list when the payload is invalid.
+ */
 function parseTargetInfos(result: Record<string, unknown>): TargetInfo[] {
     const rawTargets = result["targetInfos"];
     if (!Array.isArray(rawTargets)) {
@@ -90,6 +102,12 @@ function parseTargetInfos(result: Record<string, unknown>): TargetInfo[] {
     return targets;
 }
 
+/**
+ * Extracts a page session id from a `Target.attachedToTarget` event.
+ *
+ * @param event CDP event payload.
+ * @returns Session id for page targets, otherwise undefined.
+ */
 function parseAttachedToTargetSessionId(event: JsonRpcEvent): string | undefined {
     const params = event.params;
     if (!isObject(params)) {
@@ -106,6 +124,12 @@ function parseAttachedToTargetSessionId(event: JsonRpcEvent): string | undefined
     return type === "page" ? sessionId : undefined;
 }
 
+/**
+ * Parses and validates the payload for `Network.responseReceived` events.
+ *
+ * @param event CDP event payload.
+ * @returns Parsed network response details, or undefined when invalid.
+ */
 function parseNetworkResponseReceivedEvent(event: JsonRpcEvent): NetworkResponseReceivedEvent | undefined {
     if (!isObject(event.params)) {
         return undefined;
@@ -132,6 +156,12 @@ function parseNetworkResponseReceivedEvent(event: JsonRpcEvent): NetworkResponse
     };
 }
 
+/**
+ * Parses the result returned by `Network.getResponseBody`.
+ *
+ * @param result Raw CDP command result.
+ * @returns Parsed response body descriptor, or undefined when invalid.
+ */
 function parseGetResponseBodyResult(result: Record<string, unknown>): GetResponseBodyResult | undefined {
     const body = result["body"];
     const base64Encoded = result["base64Encoded"];
@@ -154,6 +184,12 @@ function parseGetResponseBodyResult(result: Record<string, unknown>): GetRespons
     };
 }
 
+/**
+ * Decodes a response body returned by CDP.
+ *
+ * @param result Parsed `Network.getResponseBody` result.
+ * @returns UTF-8 decoded body text.
+ */
 function decodeResponseBody(result: GetResponseBodyResult): string {
     if (result.base64Encoded === true) {
         return Buffer.from(result.body, "base64").toString("utf8");
@@ -162,10 +198,23 @@ function decodeResponseBody(result: GetResponseBodyResult): string {
     return result.body;
 }
 
+/**
+ * Resolves which configured endpoint path matches a request URL.
+ *
+ * @param requestUrl Observed request URL.
+ * @param enabledEndpointPaths Enabled endpoint path filters.
+ * @returns Matching endpoint path, or undefined when no match exists.
+ */
 function resolveEndpointPath(requestUrl: string, enabledEndpointPaths: EndpointPath[]): EndpointPath | undefined {
     return enabledEndpointPaths.find((path) => requestUrl.includes(path));
 }
 
+/**
+ * Converts raw websocket message payloads into UTF-8 strings.
+ *
+ * @param message Raw message from `ws`.
+ * @returns Message text.
+ */
 function rawMessageToString(message: RawData): string {
     if (typeof message === "string") {
         return message;
@@ -182,6 +231,11 @@ function rawMessageToString(message: RawData): string {
     return message.toString("utf8");
 }
 
+/**
+ * Reads the WSL host nameserver from `/etc/resolv.conf` when available.
+ *
+ * @returns Nameserver host IP when running under WSL, otherwise undefined.
+ */
 async function readWslNameserverHost(): Promise<string | undefined> {
     if (typeof process.env["WSL_INTEROP"] !== "string" || process.env["WSL_INTEROP"].trim() === "") {
         return undefined;
@@ -203,6 +257,12 @@ async function readWslNameserverHost(): Promise<string | undefined> {
     return undefined;
 }
 
+/**
+ * Builds a prioritized list of websocket endpoint URLs for connecting to Chrome DevTools.
+ *
+ * @param webSocketDebuggerUrl Original debugger endpoint URL.
+ * @returns Candidate websocket URLs to try in order.
+ */
 async function buildWebSocketEndpointCandidates(webSocketDebuggerUrl: string): Promise<string[]> {
     const parsed = new URL(webSocketDebuggerUrl);
     const port = parsed.port;
@@ -220,6 +280,12 @@ async function buildWebSocketEndpointCandidates(webSocketDebuggerUrl: string): P
     return uniqueHosts.map((host) => `${protocol}//${host}${port === "" ? "" : `:${port}`}${pathname}`);
 }
 
+/**
+ * Opens a websocket connection to a Chrome DevTools endpoint.
+ *
+ * @param webSocketDebuggerUrl Endpoint URL.
+ * @returns Connected websocket instance.
+ */
 async function connectWebSocket(webSocketDebuggerUrl: string): Promise<WebSocket> {
     return await new Promise<WebSocket>((resolve, reject) => {
         const socket = new WebSocket(webSocketDebuggerUrl);
@@ -238,6 +304,12 @@ async function connectWebSocket(webSocketDebuggerUrl: string): Promise<WebSocket
     });
 }
 
+/**
+ * Type guard for JSON-RPC success responses.
+ *
+ * @param value Parsed websocket payload.
+ * @returns True when payload has `id` and `result` fields.
+ */
 function isSuccessResponse(value: unknown): value is JsonRpcSuccessResponse {
     return (
         isObject(value) &&
@@ -246,6 +318,12 @@ function isSuccessResponse(value: unknown): value is JsonRpcSuccessResponse {
     );
 }
 
+/**
+ * Type guard for JSON-RPC error responses.
+ *
+ * @param value Parsed websocket payload.
+ * @returns True when payload has `id` and `error` fields.
+ */
 function isErrorResponse(value: unknown): value is JsonRpcErrorResponse {
     if (!isObject(value)) {
         return false;
@@ -255,11 +333,29 @@ function isErrorResponse(value: unknown): value is JsonRpcErrorResponse {
     return typeof value["id"] === "number" && isObject(error) && typeof error["message"] === "string";
 }
 
+/**
+ * Type guard for JSON-RPC event messages.
+ *
+ * @param value Parsed websocket payload.
+ * @returns True when payload looks like a CDP event.
+ */
 function isRpcEvent(value: unknown): value is JsonRpcEvent {
     return isObject(value) && typeof value["method"] === "string";
 }
 
-export async function startNetworkResponseListener(
+/**
+ * Starts listening to Chrome DevTools network events and emits matched TikTok API responses.
+ *
+ * This function connects to the DevTools websocket, enables `Network` domain events
+ * for page targets, captures `Network.responseReceived`, and fetches bodies for URLs
+ * matching enabled endpoint paths.
+ *
+ * @param webSocketDebuggerUrl Chrome DevTools websocket URL.
+ * @param enabledEndpointPaths Endpoint path filters to capture.
+ * @param onCapturedResponse Callback invoked for each captured response.
+ * @returns Async stop function that gracefully shuts down the listener.
+ */
+export async function enabledEndpointPaths(
     webSocketDebuggerUrl: string,
     enabledEndpointPaths: EndpointPath[],
     onCapturedResponse: (response: CapturedResponse) => Promise<void> | void
@@ -298,6 +394,14 @@ export async function startNetworkResponseListener(
     const pageSessionIds = new Set<string>();
     let commandId = 0;
 
+    /**
+     * Sends a CDP command and resolves when a matching JSON-RPC response arrives.
+     *
+     * @param method CDP method name.
+     * @param params Optional command parameters.
+     * @param sessionId Optional target session id for session-scoped commands.
+     * @returns Command result payload.
+     */
     const sendCommand = async (
         method: string,
         params?: Record<string, unknown>,
@@ -323,6 +427,11 @@ export async function startNetworkResponseListener(
         return responsePromise;
     };
 
+    /**
+     * Rejects all in-flight commands and clears pending command state.
+     *
+     * @param error Error propagated to pending command promises.
+     */
     const closeWithError = (error: Error): void => {
         for (const pending of pendingCommands.values()) {
             pending.reject(error);
@@ -330,6 +439,12 @@ export async function startNetworkResponseListener(
         pendingCommands.clear();
     };
 
+    /**
+     * Enables network domain events for a page session once per session id.
+     *
+     * @param sessionId Attached page session id.
+     * @returns Resolves when `Network.enable` has been sent for that session.
+     */
     const enableNetworkForSession = async (sessionId: string): Promise<void> => {
         if (pageSessionIds.has(sessionId)) {
             return;
@@ -339,6 +454,13 @@ export async function startNetworkResponseListener(
         await sendCommand("Network.enable", {}, sessionId);
     };
 
+    /**
+     * Handles a `Network.responseReceived` event and emits captured response data
+     * when the request URL matches one of the enabled endpoint paths.
+     *
+     * @param event CDP network event payload.
+     * @returns Resolves after capture callback processing, or early on non-matches.
+     */
     const handleNetworkResponseReceived = async (event: JsonRpcEvent): Promise<void> => {
         const parsedEvent = parseNetworkResponseReceivedEvent(event);
         if (parsedEvent === undefined) {
@@ -370,9 +492,14 @@ export async function startNetworkResponseListener(
         });
     };
 
+    /**
+     * Processes incoming websocket frames, routes JSON-RPC responses to pending
+     * commands, and handles relevant CDP events for attach and network capture.
+     */
     socket.on("message", (message: RawData) => {
         void (async () => {
             const data = rawMessageToString(message);
+            console.log("> data >", data);
             const payload = JSON.parse(data) as unknown;
 
             if (isSuccessResponse(payload)) {
@@ -436,6 +563,9 @@ export async function startNetworkResponseListener(
 
     const targetsResult = await sendCommand("Target.getTargets");
     const targets = parseTargetInfos(targetsResult);
+    /**
+     * Attaches to existing page targets and enables per-session network capture.
+     */
     for (const target of targets) {
         if (target.type !== "page") {
             continue;
@@ -456,6 +586,12 @@ export async function startNetworkResponseListener(
         }
     }
 
+    /**
+     * Gracefully shuts down the network listener by rejecting pending commands,
+     * closing the websocket, and waiting for the close event.
+     *
+     * @returns Resolves when websocket shutdown is complete.
+     */
     return async () => {
         for (const pending of pendingCommands.values()) {
             pending.reject(new Error("Network response listener is shutting down."));

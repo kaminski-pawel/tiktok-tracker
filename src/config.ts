@@ -55,6 +55,17 @@ function parseRuntimeMode(value: string | undefined): RuntimeMode {
     );
 }
 
+/**
+ * Parses environment-style boolean values used by endpoint toggle flags.
+ *
+ * Accepted truthy values: `1`, `true`, `yes`, `on`.
+ * Accepted falsy values: `0`, `false`, `no`, `off`.
+ *
+ * @param value Raw environment value.
+ * @param fallback Default value when input is missing or blank.
+ * @returns Parsed boolean value.
+ * @throws Error When the input is present but not a supported boolean token.
+ */
 function parseBoolean(value: string | undefined, fallback: boolean): boolean {
     if (value === undefined || value.trim() === "") {
         return fallback;
@@ -74,6 +85,17 @@ function parseBoolean(value: string | undefined, fallback: boolean): boolean {
     );
 }
 
+/**
+ * Resolves the set of enabled API endpoint paths from environment toggles.
+ *
+ * `TRACKER_ENDPOINT_RECOMMEND_ITEM_LIST_ENABLED` defaults to enabled, while
+ * optional endpoints are disabled by default. At least one endpoint must remain
+ * enabled for capture to run.
+ *
+ * @param env Process environment variables.
+ * @returns Enabled endpoint paths in configuration order.
+ * @throws Error When all endpoint toggles are disabled.
+ */
 function resolveEnabledEndpointPaths(env: NodeJS.ProcessEnv): EndpointPath[] {
     const recommendEnabled = parseBoolean(env["TRACKER_ENDPOINT_RECOMMEND_ITEM_LIST_ENABLED"], true);
     const prefetchExploreEnabled = parseBoolean(
