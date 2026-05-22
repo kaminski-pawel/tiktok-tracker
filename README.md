@@ -32,6 +32,7 @@ Use environment variables to configure behavior:
 - `TRACKER_LAUNCH_TIMEOUT_MS`: startup/attach timeout in milliseconds (default `15000`).
 - `TRACKER_LAUNCH_URL`: initial URL when using managed launch (default `https://www.tiktok.com/`).
 - `TRACKER_RAW_JSON_ARCHIVE_ROOT_DIR`: root directory for archived matched API payloads (default `<project>/data/raw-json-archive`).
+- `TRACKER_CSV_COLUMN_MAPPING_CONFIG_PATH`: JSON file path for configurable CSV field mappings (default `<project>/config/csv-column-mapping.json`).
 - `TRACKER_CHROME_PATH`: optional explicit Chrome/Chromium executable path.
 - `TRACKER_CHROME_USER_DATA_DIR`: optional user data directory for managed launch.
 - `TRACKER_ENDPOINT_RECOMMEND_ITEM_LIST_ENABLED`: enable capture for `/api/recommend/item_list` (default `true`).

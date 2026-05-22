@@ -4,6 +4,9 @@ const test = require("node:test");
 const {
     extractItemListRowCandidates
 } = require("../dist/normalize/extractor.js");
+const {
+    loadCsvColumnSchemaConfig
+} = require("../dist/schema/csv-schema.js");
 
 test("extracts row candidates from standard and variant itemList payloads", () => {
     const capturedResponse = {
@@ -83,6 +86,7 @@ test("extracts row candidates from standard and variant itemList payloads", () =
     assert.equal(rowCandidates[0].desc, "first desc");
     assert.equal(rowCandidates[0].authorNickname, "author-one");
     assert.deepEqual(rowCandidates[0].contentsDesc, ["content-a", "content-b"]);
+    assert.equal(rowCandidates[0].columns.videoId, "video-1");
 
     assert.equal(rowCandidates[1].videoId, "987654");
     assert.equal(rowCandidates[1].isAd, true);
@@ -90,6 +94,7 @@ test("extracts row candidates from standard and variant itemList payloads", () =
     assert.equal(rowCandidates[1].authorStatsFollowerCount, 200);
     assert.deepEqual(rowCandidates[1].contentsDesc, ["fallback-content"]);
     assert.equal(rowCandidates[1].statsShareCount, 55);
+    assert.equal(rowCandidates[1].columns.statsShareCount, 55);
 });
 
 test("returns empty candidates for invalid JSON or payloads without itemList", () => {
@@ -111,4 +116,63 @@ test("returns empty candidates for invalid JSON or payloads without itemList", (
 
     assert.deepEqual(extractItemListRowCandidates(invalidJsonResponse), []);
     assert.deepEqual(extractItemListRowCandidates(missingItemListResponse), []);
+});
+
+test("supports custom schema mappings passed at runtime", () => {
+    const capturedResponse = {
+        endpointPath: "/api/recommend/item_list",
+        requestId: "req-custom",
+        requestUrl: "https://www.tiktok.com/api/recommend/item_list?cursor=77",
+        status: 200,
+        body: JSON.stringify({
+            itemList: [
+                {
+                    id: "video-2",
+                    description: "custom description",
+                    contents: [{ text: "part-1" }, { text: "part-2" }],
+                    stats: { play_count: "123" }
+                }
+            ]
+        })
+    };
+
+    const customMappings = [
+        {
+            columnName: "itemId",
+            type: "string",
+            paths: ["id"]
+        },
+        {
+            columnName: "headline",
+            type: "string",
+            paths: ["description", "desc"]
+        },
+        {
+            columnName: "contentPieces",
+            type: "string[]",
+            paths: ["contents[].text"]
+        },
+        {
+            columnName: "plays",
+            type: "number",
+            paths: ["stats.playCount", "stats.play_count"]
+        }
+    ];
+
+    const rowCandidates = extractItemListRowCandidates(capturedResponse, customMappings);
+
+    assert.equal(rowCandidates.length, 1);
+    assert.equal(rowCandidates[0].itemId, "video-2");
+    assert.equal(rowCandidates[0].headline, "custom description");
+    assert.deepEqual(rowCandidates[0].contentPieces, ["part-1", "part-2"]);
+    assert.equal(rowCandidates[0].plays, 123);
+    assert.equal(rowCandidates[0].videoId, undefined);
+});
+
+test("loads schema mappings from dedicated json config", () => {
+    const schemaConfig = loadCsvColumnSchemaConfig("config/csv-column-mapping.json");
+
+    assert.ok(Array.isArray(schemaConfig.columns));
+    assert.ok(schemaConfig.columns.length > 0);
+    assert.equal(schemaConfig.columns[0].columnName, "videoId");
 });

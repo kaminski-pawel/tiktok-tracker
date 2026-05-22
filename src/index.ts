@@ -2,10 +2,12 @@ import { connectToChrome } from "./chrome/attach";
 import { startNetworkResponseListener } from "./chrome/network-listener";
 import { loadRuntimeConfig } from "./config";
 import { extractItemListRowCandidates } from "./normalize/extractor";
+import { loadCsvColumnSchemaConfig } from "./schema/csv-schema";
 import { createRawJsonArchiveWriter } from "./store/raw-json-archive";
 
 async function main(): Promise<void> {
     const runtimeConfig = loadRuntimeConfig(process.env);
+    const csvColumnSchemaConfig = loadCsvColumnSchemaConfig(runtimeConfig.csvColumnMappingConfigPath);
     const rawJsonArchiveWriter = createRawJsonArchiveWriter(runtimeConfig.rawJsonArchiveRootDir);
     const chromeSession = await connectToChrome(runtimeConfig);
     const stopNetworkListener = await startNetworkResponseListener(
@@ -13,7 +15,7 @@ async function main(): Promise<void> {
         runtimeConfig.enabledEndpointPaths,
         async (capturedResponse) => {
             const archivedFilePath = await rawJsonArchiveWriter.persistMatchedResponse(capturedResponse);
-            const rowCandidates = extractItemListRowCandidates(capturedResponse);
+            const rowCandidates = extractItemListRowCandidates(capturedResponse, csvColumnSchemaConfig.columns);
             process.stdout.write(
                 [
                     "Captured endpoint response.",
@@ -50,7 +52,8 @@ async function main(): Promise<void> {
             `Mode: ${chromeSession.mode}`,
             `DevTools endpoint: ${chromeSession.devToolsBaseUrl}`,
             `Enabled endpoints: ${runtimeConfig.enabledEndpointPaths.join(", ")}`,
-            `Raw JSON archive root: ${runtimeConfig.rawJsonArchiveRootDir}`
+            `Raw JSON archive root: ${runtimeConfig.rawJsonArchiveRootDir}`,
+            `CSV column mapping config: ${runtimeConfig.csvColumnMappingConfigPath}`
         ].join("\n") + "\n"
     );
 

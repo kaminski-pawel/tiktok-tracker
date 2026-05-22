@@ -1,0 +1,207 @@
+{
+    "columns": [
+        {
+            "columnName": "videoId",
+            "type": "string",
+            "paths": [
+                "id",
+                "awemeId",
+                "aweme_id",
+                "itemId",
+                "item_id"
+            ]
+        },
+        {
+            "columnName": "desc",
+            "type": "string",
+            "paths": [
+                "desc",
+                "description"
+            ]
+        },
+        {
+            "columnName": "isAd",
+            "type": "boolean",
+            "paths": [
+                "isAd",
+                "is_ad",
+                "ad"
+            ]
+        },
+        {
+            "columnName": "authorNickname",
+            "type": "string",
+            "paths": [
+                "author.nickname",
+                "author.nick_name"
+            ]
+        },
+        {
+            "columnName": "authorPrivateAccount",
+            "type": "boolean",
+            "paths": [
+                "author.privateAccount",
+                "author.private_account"
+            ]
+        },
+        {
+            "columnName": "authorUniqueId",
+            "type": "string",
+            "paths": [
+                "author.uniqueId",
+                "author.unique_id"
+            ]
+        },
+        {
+            "columnName": "authorStatsDiggCount",
+            "type": "number",
+            "paths": [
+                "authorStats.diggCount",
+                "authorStats.digg_count",
+                "author_stats.diggCount",
+                "author_stats.digg_count",
+                "author.stats.diggCount",
+                "author.stats.digg_count"
+            ]
+        },
+        {
+            "columnName": "authorStatsFollowerCount",
+            "type": "number",
+            "paths": [
+                "authorStats.followerCount",
+                "authorStats.follower_count",
+                "author_stats.followerCount",
+                "author_stats.follower_count",
+                "author.stats.followerCount",
+                "author.stats.follower_count"
+            ]
+        },
+        {
+            "columnName": "authorStatsFollowingCount",
+            "type": "number",
+            "paths": [
+                "authorStats.followingCount",
+                "authorStats.following_count",
+                "author_stats.followingCount",
+                "author_stats.following_count",
+                "author.stats.followingCount",
+                "author.stats.following_count"
+            ]
+        },
+        {
+            "columnName": "authorStatsFriendCount",
+            "type": "number",
+            "paths": [
+                "authorStats.friendCount",
+                "authorStats.friend_count",
+                "author_stats.friendCount",
+                "author_stats.friend_count",
+                "author.stats.friendCount",
+                "author.stats.friend_count"
+            ]
+        },
+        {
+            "columnName": "authorStatsHeart",
+            "type": "number",
+            "paths": [
+                "authorStats.heart",
+                "author_stats.heart",
+                "author.stats.heart"
+            ]
+        },
+        {
+            "columnName": "authorStatsHeartCount",
+            "type": "number",
+            "paths": [
+                "authorStats.heartCount",
+                "authorStats.heart_count",
+                "author_stats.heartCount",
+                "author_stats.heart_count",
+                "author.stats.heartCount",
+                "author.stats.heart_count"
+            ]
+        },
+        {
+            "columnName": "authorStatsVideoCount",
+            "type": "number",
+            "paths": [
+                "authorStats.videoCount",
+                "authorStats.video_count",
+                "author_stats.videoCount",
+                "author_stats.video_count",
+                "author.stats.videoCount",
+                "author.stats.video_count"
+            ]
+        },
+        {
+            "columnName": "contentsDesc",
+            "type": "string[]",
+            "paths": [
+                "contents[].desc",
+                "contents[].description",
+                "contents[].text",
+                "content_list[].desc",
+                "content_list[].description",
+                "content_list[].text"
+            ]
+        },
+        {
+            "columnName": "musicAuthorName",
+            "type": "string",
+            "paths": [
+                "music.authorName",
+                "music.author_name"
+            ]
+        },
+        {
+            "columnName": "statsCollectCount",
+            "type": "number",
+            "paths": [
+                "stats.collectCount",
+                "stats.collect_count",
+                "statistics.collectCount",
+                "statistics.collect_count"
+            ]
+        },
+        {
+            "columnName": "statsCommentCount",
+            "type": "number",
+            "paths": [
+                "stats.commentCount",
+                "stats.comment_count",
+                "statistics.commentCount",
+                "statistics.comment_count"
+            ]
+        },
+        {
+            "columnName": "statsDiggCount",
+            "type": "number",
+            "paths": [
+                "stats.diggCount",
+                "stats.digg_count",
+                "statistics.diggCount",
+                "statistics.digg_count"
+            ]
+        },
+        {
+            "columnName": "statsPlayCount",
+            "type": "number",
+            "paths": [
+                "stats.playCount",
+                "stats.play_count",
+                "statistics.playCount",
+                "statistics.play_count"
+            ]
+        },
+        {
+            "columnName": "statsShareCount",
+            "type": "number",
+            "paths": [
+                "stats.shareCount",
+                "stats.share_count",
+                "statistics.shareCount",
+                "statistics.share_count"
+            ]
+        }
+    ]
+}

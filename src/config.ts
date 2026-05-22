@@ -19,6 +19,7 @@ export interface RuntimeConfig {
     launchTimeoutMs: number;
     enabledEndpointPaths: EndpointPath[];
     rawJsonArchiveRootDir: string;
+    csvColumnMappingConfigPath: string;
     chromePath?: string;
     chromeUserDataDir?: string;
 }
@@ -28,6 +29,11 @@ const DEFAULT_DEBUG_PORT = 9222;
 const DEFAULT_LAUNCH_URL = "https://www.tiktok.com/";
 const DEFAULT_LAUNCH_TIMEOUT_MS = 15_000;
 const DEFAULT_RAW_JSON_ARCHIVE_ROOT_DIR = resolve(process.cwd(), "data", "raw-json-archive");
+const DEFAULT_CSV_COLUMN_MAPPING_CONFIG_PATH = resolve(
+    process.cwd(),
+    "config",
+    "csv-column-mapping.json"
+);
 const DEFAULT_WINDOWS_CHROME_PATH = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
 const DEFAULT_WSL_CHROME_PATH = "/mnt/c/Program Files/Google/Chrome/Application/chrome.exe";
 const DEFAULT_MACOS_CHROME_PATH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
@@ -195,6 +201,9 @@ export function loadRuntimeConfig(env: NodeJS.ProcessEnv): RuntimeConfig {
     );
     const rawJsonArchiveRootDir =
         nonEmptyString(env["TRACKER_RAW_JSON_ARCHIVE_ROOT_DIR"]) ?? DEFAULT_RAW_JSON_ARCHIVE_ROOT_DIR;
+    const csvColumnMappingConfigPath =
+        nonEmptyString(env["TRACKER_CSV_COLUMN_MAPPING_CONFIG_PATH"]) ??
+        DEFAULT_CSV_COLUMN_MAPPING_CONFIG_PATH;
     const chromePath =
         normalizeWindowsPathForWsl(nonEmptyString(env["TRACKER_CHROME_PATH"]), env) ??
         getDefaultChromePath(env);
@@ -210,7 +219,8 @@ export function loadRuntimeConfig(env: NodeJS.ProcessEnv): RuntimeConfig {
         launchUrl,
         enabledEndpointPaths,
         launchTimeoutMs,
-        rawJsonArchiveRootDir
+        rawJsonArchiveRootDir,
+        csvColumnMappingConfigPath
     };
 
     if (chromePath !== undefined) {
