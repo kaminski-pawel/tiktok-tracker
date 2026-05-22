@@ -1,20 +1,24 @@
 import { connectToChrome } from "./chrome/attach";
 import { startNetworkResponseListener } from "./chrome/network-listener";
 import { loadRuntimeConfig } from "./config";
+import { createRawJsonArchiveWriter } from "./store/raw-json-archive";
 
 async function main(): Promise<void> {
     const runtimeConfig = loadRuntimeConfig(process.env);
+    const rawJsonArchiveWriter = createRawJsonArchiveWriter(runtimeConfig.rawJsonArchiveRootDir);
     const chromeSession = await connectToChrome(runtimeConfig);
     const stopNetworkListener = await startNetworkResponseListener(
         chromeSession.webSocketDebuggerUrl,
         runtimeConfig.enabledEndpointPaths,
-        (capturedResponse) => {
+        async (capturedResponse) => {
+            const archivedFilePath = await rawJsonArchiveWriter.persistMatchedResponse(capturedResponse);
             process.stdout.write(
                 [
                     "Captured endpoint response.",
                     `Endpoint: ${capturedResponse.endpointPath}`,
                     `Status: ${capturedResponse.status}`,
-                    `URL: ${capturedResponse.requestUrl}`
+                    `URL: ${capturedResponse.requestUrl}`,
+                    `Archived JSON: ${archivedFilePath}`
                 ].join("\n") + "\n"
             );
         }
@@ -42,7 +46,8 @@ async function main(): Promise<void> {
             "TikTok tracker runtime initialized.",
             `Mode: ${chromeSession.mode}`,
             `DevTools endpoint: ${chromeSession.devToolsBaseUrl}`,
-            `Enabled endpoints: ${runtimeConfig.enabledEndpointPaths.join(", ")}`
+            `Enabled endpoints: ${runtimeConfig.enabledEndpointPaths.join(", ")}`,
+            `Raw JSON archive root: ${runtimeConfig.rawJsonArchiveRootDir}`
         ].join("\n") + "\n"
     );
 

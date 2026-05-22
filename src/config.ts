@@ -1,3 +1,5 @@
+import { resolve } from "node:path";
+
 export type RuntimeMode = "managed-launch" | "attach-to-existing";
 
 export const RECOMMEND_ITEM_LIST_ENDPOINT = "/api/recommend/item_list";
@@ -16,6 +18,7 @@ export interface RuntimeConfig {
     launchUrl: string;
     launchTimeoutMs: number;
     enabledEndpointPaths: EndpointPath[];
+    rawJsonArchiveRootDir: string;
     chromePath?: string;
     chromeUserDataDir?: string;
 }
@@ -24,6 +27,7 @@ const DEFAULT_DEBUG_HOST = "127.0.0.1";
 const DEFAULT_DEBUG_PORT = 9222;
 const DEFAULT_LAUNCH_URL = "https://www.tiktok.com/";
 const DEFAULT_LAUNCH_TIMEOUT_MS = 15_000;
+const DEFAULT_RAW_JSON_ARCHIVE_ROOT_DIR = resolve(process.cwd(), "data", "raw-json-archive");
 const DEFAULT_WINDOWS_CHROME_PATH = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
 const DEFAULT_WSL_CHROME_PATH = "/mnt/c/Program Files/Google/Chrome/Application/chrome.exe";
 const DEFAULT_MACOS_CHROME_PATH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
@@ -189,6 +193,8 @@ export function loadRuntimeConfig(env: NodeJS.ProcessEnv): RuntimeConfig {
         env["TRACKER_LAUNCH_TIMEOUT_MS"],
         DEFAULT_LAUNCH_TIMEOUT_MS
     );
+    const rawJsonArchiveRootDir =
+        nonEmptyString(env["TRACKER_RAW_JSON_ARCHIVE_ROOT_DIR"]) ?? DEFAULT_RAW_JSON_ARCHIVE_ROOT_DIR;
     const chromePath =
         normalizeWindowsPathForWsl(nonEmptyString(env["TRACKER_CHROME_PATH"]), env) ??
         getDefaultChromePath(env);
@@ -203,7 +209,8 @@ export function loadRuntimeConfig(env: NodeJS.ProcessEnv): RuntimeConfig {
         debugPort,
         launchUrl,
         enabledEndpointPaths,
-        launchTimeoutMs
+        launchTimeoutMs,
+        rawJsonArchiveRootDir
     };
 
     if (chromePath !== undefined) {

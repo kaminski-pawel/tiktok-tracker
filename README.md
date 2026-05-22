@@ -31,6 +31,7 @@ Use environment variables to configure behavior:
 - `TRACKER_DEBUG_PORT`: DevTools port (default `9222`).
 - `TRACKER_LAUNCH_TIMEOUT_MS`: startup/attach timeout in milliseconds (default `15000`).
 - `TRACKER_LAUNCH_URL`: initial URL when using managed launch (default `https://www.tiktok.com/`).
+- `TRACKER_RAW_JSON_ARCHIVE_ROOT_DIR`: root directory for archived matched API payloads (default `<project>/data/raw-json-archive`).
 - `TRACKER_CHROME_PATH`: optional explicit Chrome/Chromium executable path.
 - `TRACKER_CHROME_USER_DATA_DIR`: optional user data directory for managed launch.
 - `TRACKER_ENDPOINT_RECOMMEND_ITEM_LIST_ENABLED`: enable capture for `/api/recommend/item_list` (default `true`).
@@ -38,6 +39,18 @@ Use environment variables to configure behavior:
 - `TRACKER_ENDPOINT_PRELOAD_ITEM_LIST_ENABLED`: enable capture for `/api/preload/item_list` (default `false`).
 
 By default, only `/api/recommend/item_list` is captured.
+
+## Raw JSON Archival
+
+Each matched endpoint response is persisted as a standalone JSON file. Payloads are not embedded in CSV fields.
+
+Output structure:
+
+- `<archive-root>/<YYYY-MM-DD>/<endpoint-path>/<timestamp>_<requestId>.json`
+
+Example:
+
+- `data/raw-json-archive/2026-05-22/api/recommend/item_list/2026-05-22T10-16-34-921Z_7526.55.json`
 
 WSL2 development note:
 

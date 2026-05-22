@@ -355,7 +355,7 @@ function isRpcEvent(value: unknown): value is JsonRpcEvent {
  * @param onCapturedResponse Callback invoked for each captured response.
  * @returns Async stop function that gracefully shuts down the listener.
  */
-export async function enabledEndpointPaths(
+export async function startNetworkResponseListener(
     webSocketDebuggerUrl: string,
     enabledEndpointPaths: EndpointPath[],
     onCapturedResponse: (response: CapturedResponse) => Promise<void> | void
@@ -466,11 +466,12 @@ export async function enabledEndpointPaths(
         if (parsedEvent === undefined) {
             return;
         }
-
+        // console.log("parsedEvent.response.url", parsedEvent.response.url);
         const endpointPath = resolveEndpointPath(parsedEvent.response.url, enabledEndpointPaths);
         if (endpointPath === undefined) {
             return;
         }
+        console.log("endpointPath", endpointPath);
 
         const result = await sendCommand(
             "Network.getResponseBody",
@@ -499,7 +500,7 @@ export async function enabledEndpointPaths(
     socket.on("message", (message: RawData) => {
         void (async () => {
             const data = rawMessageToString(message);
-            console.log("> data >", data);
+            // console.log("> data >", data);
             const payload = JSON.parse(data) as unknown;
 
             if (isSuccessResponse(payload)) {
