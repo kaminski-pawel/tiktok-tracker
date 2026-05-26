@@ -57,11 +57,11 @@ Example:
 
 ## CSV Output
 
-Each extracted item row is appended to a daily CSV file.
+Each extracted item row is appended to a daily CSV file partitioned by source endpoint and capture run id.
 
 Output structure:
 
-- `<csv-root>/tiktok_<YYYY-MM-DD>.csv`
+- `<csv-root>/tiktok_<YYYY-MM-DD>_<source-endpoint>_<capture-run-id>.csv`
 
 Default CSV headers:
 

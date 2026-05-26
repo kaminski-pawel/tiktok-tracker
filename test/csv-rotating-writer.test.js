@@ -53,9 +53,9 @@ test("writes configured default columns to the daily CSV file in schema order", 
         }
     ]);
 
-    assert.equal(outputPath, join(tempRootDir, "tiktok_2026-05-26.csv"));
+    assert.deepEqual(outputPath, [join(tempRootDir, "tiktok_2026-05-26_api_recommend_item_list_run-001.csv")]);
 
-    const csvContents = await readFile(outputPath, "utf8");
+    const csvContents = await readFile(outputPath[0], "utf8");
     const lines = csvContents.trimEnd().split("\n");
 
     assert.equal(
@@ -149,11 +149,54 @@ test("appends rows without duplicating the header", async () => {
         }
     ]);
 
-    const csvContents = await readFile(outputPath, "utf8");
+    const csvContents = await readFile(outputPath[0], "utf8");
     const lines = csvContents.trimEnd().split("\n");
 
     assert.equal(lines.length, 3);
     assert.equal(lines[1].split(",")[0], "video-1");
     assert.equal(lines[2].split(",")[0], "video-2");
+});
+
+test("writes different source endpoints to different csv files", async () => {
+    const tempRootDir = await mkdtemp(join(tmpdir(), "tiktok-tracker-csv-"));
+    const writer = createCsvRotatingWriter(
+        tempRootDir,
+        loadCsvColumnSchemaConfig("config/csv-column-mapping.json").columns,
+        "run-001",
+        () => new Date("2026-05-26T12:00:00.000Z")
+    );
+
+    const outputPaths = await writer.appendRowCandidates([
+        {
+            itemIndex: 0,
+            sourceEndpoint: "/api/recommend/item_list",
+            requestId: "req-1",
+            requestUrl: "https://www.tiktok.com/api/recommend/item_list?cursor=1",
+            status: 200,
+            columns: { id: "video-1" }
+        },
+        {
+            itemIndex: 1,
+            sourceEndpoint: "/api/preload/item_list",
+            requestId: "req-2",
+            requestUrl: "https://www.tiktok.com/api/preload/item_list?cursor=2",
+            status: 200,
+            columns: { id: "video-2" }
+        }
+    ]);
+
+    const sortedPaths = outputPaths.slice().sort();
+    assert.deepEqual(sortedPaths, [
+        join(tempRootDir, "tiktok_2026-05-26_api_preload_item_list_run-001.csv"),
+        join(tempRootDir, "tiktok_2026-05-26_api_recommend_item_list_run-001.csv")
+    ]);
+
+    const recommendCsv = await readFile(join(tempRootDir, "tiktok_2026-05-26_api_recommend_item_list_run-001.csv"), "utf8");
+    const preloadCsv = await readFile(join(tempRootDir, "tiktok_2026-05-26_api_preload_item_list_run-001.csv"), "utf8");
+
+    assert.equal(recommendCsv.trimEnd().split("\n").length, 2);
+    assert.equal(preloadCsv.trimEnd().split("\n").length, 2);
+    assert.equal(recommendCsv.trimEnd().split("\n")[1].split(",")[0], "video-1");
+    assert.equal(preloadCsv.trimEnd().split("\n")[1].split(",")[0], "video-2");
 });
 

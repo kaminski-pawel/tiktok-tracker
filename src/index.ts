@@ -39,7 +39,7 @@ async function main(): Promise<void> {
 
             const archivedFilePath = await rawJsonArchiveWriter.persistMatchedResponse(capturedResponse);
             const rowCandidates = extractItemListRowCandidates(capturedResponse, csvColumnSchemaConfig.columns);
-            const csvFilePath = await csvWriter.appendRowCandidates(rowCandidates);
+            const csvFilePaths = await csvWriter.appendRowCandidates(rowCandidates);
             process.stdout.write(
                 [
                     "Captured endpoint response.",
@@ -48,7 +48,7 @@ async function main(): Promise<void> {
                     `URL: ${capturedResponse.requestUrl}`,
                     `Archived JSON: ${archivedFilePath}`,
                     `Extracted row candidates: ${rowCandidates.length}`,
-                    `CSV output: ${csvFilePath ?? "no rows written"}`
+                    `CSV output: ${csvFilePaths.length > 0 ? csvFilePaths.join(", ") : "no rows written"}`
                 ].join("\n") + "\n"
             );
         }

@@ -13,7 +13,7 @@ const CSV_METADATA_COLUMNS = [
 ] as const;
 
 export interface CsvRotatingWriter {
-    appendRowCandidates(rowCandidates: ItemListRowCandidate[]): Promise<string | undefined>;
+    appendRowCandidates(rowCandidates: ItemListRowCandidate[]): Promise<string[]>;
 }
 
 /**
@@ -24,6 +24,17 @@ export interface CsvRotatingWriter {
  */
 function formatUtcDate(value: Date): string {
     return value.toISOString().slice(0, 10);
+}
+
+/**
+ * Converts an endpoint path into a file-name-safe token.
+ *
+ * @param endpointPath API endpoint path.
+ * @returns Sanitized endpoint token.
+ */
+function sanitizeEndpointPath(endpointPath: string): string {
+    const normalized = endpointPath.replaceAll("/", "_").replaceAll("-", "_");
+    return normalized.replace(/[^a-zA-Z0-9_]/g, "_").replace(/^_+|_+$/g, "");
 }
 
 /**
@@ -104,39 +115,54 @@ export function createCsvRotatingWriter(
     const headerLine = `${headerColumns.map((columnName) => formatCsvField(columnName)).join(",")}\n`;
 
     return {
-        async appendRowCandidates(rowCandidates: ItemListRowCandidate[]): Promise<string | undefined> {
+        async appendRowCandidates(rowCandidates: ItemListRowCandidate[]): Promise<string[]> {
             if (rowCandidates.length === 0) {
-                return undefined;
+                return [];
             }
 
             const outputDate = formatUtcDate(nowProvider());
-            const outputPath = join(csvRootDir, `tiktok_${outputDate}.csv`);
             await mkdir(csvRootDir, { recursive: true });
-
-            if (!(await fileExists(outputPath))) {
-                await writeFile(outputPath, headerLine, "utf8");
-            }
 
             const now = nowProvider();
             const seenAtUtcPlusOne = formatUtcPlusOneTimestamp(now);
+            const rowCandidatesByEndpoint = new Map<string, ItemListRowCandidate[]>();
+            for (const rowCandidate of rowCandidates) {
+                const endpointRows = rowCandidatesByEndpoint.get(rowCandidate.sourceEndpoint) ?? [];
+                endpointRows.push(rowCandidate);
+                rowCandidatesByEndpoint.set(rowCandidate.sourceEndpoint, endpointRows);
+            }
 
-            const lines = rowCandidates
-                .map((rowCandidate) =>
-                    `${[
-                        ...columnMappings
-                        .map((column) =>
-                            formatCsvField(rowCandidate.columns[column.columnName] as string | number | boolean | string[] | undefined)
-                        ),
-                        formatCsvField(captureRunId),
-                        formatCsvField(rowCandidate.sourceEndpoint),
-                        formatCsvField(rowCandidate.requestUrl),
-                        formatCsvField(seenAtUtcPlusOne)
-                    ].join(",")}\n`
-                )
-                .join("");
+            const outputPaths: string[] = [];
+            for (const [sourceEndpoint, endpointRows] of rowCandidatesByEndpoint.entries()) {
+                const outputPath = join(
+                    csvRootDir,
+                    `tiktok_${outputDate}_${sanitizeEndpointPath(sourceEndpoint)}_${captureRunId}.csv`
+                );
 
-            await appendFile(outputPath, lines, "utf8");
-            return outputPath;
+                if (!(await fileExists(outputPath))) {
+                    await writeFile(outputPath, headerLine, "utf8");
+                }
+
+                const lines = endpointRows
+                    .map((rowCandidate) =>
+                        `${[
+                            ...columnMappings
+                            .map((column) =>
+                                formatCsvField(rowCandidate.columns[column.columnName] as string | number | boolean | string[] | undefined)
+                            ),
+                            formatCsvField(captureRunId),
+                            formatCsvField(rowCandidate.sourceEndpoint),
+                            formatCsvField(rowCandidate.requestUrl),
+                            formatCsvField(seenAtUtcPlusOne)
+                        ].join(",")}\n`
+                    )
+                    .join("");
+
+                await appendFile(outputPath, lines, "utf8");
+                outputPaths.push(outputPath);
+            }
+
+            return outputPaths;
         }
     };
 }
