@@ -5,6 +5,7 @@ Phase 1 scaffold is in place with strict TypeScript and quality gates.
 ## Available Scripts
 
 - `npm run build`: Compile TypeScript into `dist/`.
+- `node dist/index.js`: Run compiled code.
 - `npm run lint`: Run ESLint for TypeScript source files.
 - `npm run lint:fix`: Auto-fix supported lint issues.
 - `npm run typecheck`: Run TypeScript checks without emitting files.
@@ -32,6 +33,7 @@ Use environment variables to configure behavior:
 - `TRACKER_LAUNCH_TIMEOUT_MS`: startup/attach timeout in milliseconds (default `15000`).
 - `TRACKER_LAUNCH_URL`: initial URL when using managed launch (default `https://www.tiktok.com/`).
 - `TRACKER_RAW_JSON_ARCHIVE_ROOT_DIR`: root directory for archived matched API payloads (default `<project>/data/raw-json-archive`).
+- `TRACKER_CSV_OUTPUT_ROOT_DIR`: root directory for daily rotated CSV exports (default `<project>/data/csv`).
 - `TRACKER_CSV_COLUMN_MAPPING_CONFIG_PATH`: JSON file path for configurable CSV field mappings (default `<project>/config/csv-column-mapping.json`).
 - `TRACKER_CHROME_PATH`: optional explicit Chrome/Chromium executable path.
 - `TRACKER_CHROME_USER_DATA_DIR`: optional user data directory for managed launch.
@@ -52,6 +54,26 @@ Output structure:
 Example:
 
 - `data/raw-json-archive/2026-05-22/api/recommend/item_list/2026-05-22T10-16-34-921Z_7526.55.json`
+
+## CSV Output
+
+Each extracted item row is appended to a daily CSV file.
+
+Output structure:
+
+- `<csv-root>/tiktok_<YYYY-MM-DD>.csv`
+
+Default CSV headers:
+
+- `id`, `desc`, `isAd`
+- `author.nickname`, `author.privateAccount`, `author.uniqueId`
+- `authorStats.diggCount`, `authorStats.followerCount`, `authorStats.followingCount`, `authorStats.friendCount`, `authorStats.heart`, `authorStats.heartCount`, `authorStats.videoCount`
+- `contents[].desc`
+- `music.authorName`
+- `stats.collectCount`, `stats.commentCount`, `stats.diggCount`, `stats.playCount`, `stats.shareCount`
+- `capture_run_id`, `source_endpoint`, `request_url`, `fetched_at_utc+1`
+
+Array fields are flattened into a ` | `-delimited string in the CSV rather than embedding raw JSON.
 
 WSL2 development note:
 

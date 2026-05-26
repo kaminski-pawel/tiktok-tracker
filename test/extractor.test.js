@@ -82,19 +82,19 @@ test("extracts row candidates from standard and variant itemList payloads", () =
 
     assert.equal(rowCandidates.length, 2);
 
-    assert.equal(rowCandidates[0].videoId, "video-1");
+    assert.equal(rowCandidates[0].id, "video-1");
     assert.equal(rowCandidates[0].desc, "first desc");
-    assert.equal(rowCandidates[0].authorNickname, "author-one");
-    assert.deepEqual(rowCandidates[0].contentsDesc, ["content-a", "content-b"]);
-    assert.equal(rowCandidates[0].columns.videoId, "video-1");
+    assert.equal(rowCandidates[0]["author.nickname"], "author-one");
+    assert.deepEqual(rowCandidates[0]["contents[].desc"], ["content-a", "content-b"]);
+    assert.equal(rowCandidates[0].columns.id, "video-1");
 
-    assert.equal(rowCandidates[1].videoId, "987654");
+    assert.equal(rowCandidates[1].id, "987654");
     assert.equal(rowCandidates[1].isAd, true);
-    assert.equal(rowCandidates[1].authorPrivateAccount, true);
-    assert.equal(rowCandidates[1].authorStatsFollowerCount, 200);
-    assert.deepEqual(rowCandidates[1].contentsDesc, ["fallback-content"]);
-    assert.equal(rowCandidates[1].statsShareCount, 55);
-    assert.equal(rowCandidates[1].columns.statsShareCount, 55);
+    assert.equal(rowCandidates[1]["author.privateAccount"], true);
+    assert.equal(rowCandidates[1]["authorStats.followerCount"], 200);
+    assert.deepEqual(rowCandidates[1]["contents[].desc"], ["fallback-content"]);
+    assert.equal(rowCandidates[1]["stats.shareCount"], 55);
+    assert.equal(rowCandidates[1].columns["stats.shareCount"], 55);
 });
 
 test("returns empty candidates for invalid JSON or payloads without itemList", () => {
@@ -166,7 +166,7 @@ test("supports custom schema mappings passed at runtime", () => {
     assert.equal(rowCandidates[0].headline, "custom description");
     assert.deepEqual(rowCandidates[0].contentPieces, ["part-1", "part-2"]);
     assert.equal(rowCandidates[0].plays, 123);
-    assert.equal(rowCandidates[0].videoId, undefined);
+    assert.equal(rowCandidates[0].id, undefined);
 });
 
 test("loads schema mappings from dedicated json config", () => {
@@ -174,5 +174,5 @@ test("loads schema mappings from dedicated json config", () => {
 
     assert.ok(Array.isArray(schemaConfig.columns));
     assert.ok(schemaConfig.columns.length > 0);
-    assert.equal(schemaConfig.columns[0].columnName, "videoId");
+    assert.equal(schemaConfig.columns[0].columnName, "id");
 });

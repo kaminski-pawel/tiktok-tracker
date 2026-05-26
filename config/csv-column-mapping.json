@@ -1,7 +1,7 @@
 {
     "columns": [
         {
-            "columnName": "videoId",
+            "columnName": "id",
             "type": "string",
             "paths": [
                 "id",
@@ -29,7 +29,7 @@
             ]
         },
         {
-            "columnName": "authorNickname",
+            "columnName": "author.nickname",
             "type": "string",
             "paths": [
                 "author.nickname",
@@ -37,7 +37,7 @@
             ]
         },
         {
-            "columnName": "authorPrivateAccount",
+            "columnName": "author.privateAccount",
             "type": "boolean",
             "paths": [
                 "author.privateAccount",
@@ -45,7 +45,7 @@
             ]
         },
         {
-            "columnName": "authorUniqueId",
+            "columnName": "author.uniqueId",
             "type": "string",
             "paths": [
                 "author.uniqueId",
@@ -53,7 +53,7 @@
             ]
         },
         {
-            "columnName": "authorStatsDiggCount",
+            "columnName": "authorStats.diggCount",
             "type": "number",
             "paths": [
                 "authorStats.diggCount",
@@ -65,7 +65,7 @@
             ]
         },
         {
-            "columnName": "authorStatsFollowerCount",
+            "columnName": "authorStats.followerCount",
             "type": "number",
             "paths": [
                 "authorStats.followerCount",
@@ -77,7 +77,7 @@
             ]
         },
         {
-            "columnName": "authorStatsFollowingCount",
+            "columnName": "authorStats.followingCount",
             "type": "number",
             "paths": [
                 "authorStats.followingCount",
@@ -89,7 +89,7 @@
             ]
         },
         {
-            "columnName": "authorStatsFriendCount",
+            "columnName": "authorStats.friendCount",
             "type": "number",
             "paths": [
                 "authorStats.friendCount",
@@ -101,7 +101,7 @@
             ]
         },
         {
-            "columnName": "authorStatsHeart",
+            "columnName": "authorStats.heart",
             "type": "number",
             "paths": [
                 "authorStats.heart",
@@ -110,7 +110,7 @@
             ]
         },
         {
-            "columnName": "authorStatsHeartCount",
+            "columnName": "authorStats.heartCount",
             "type": "number",
             "paths": [
                 "authorStats.heartCount",
@@ -122,7 +122,7 @@
             ]
         },
         {
-            "columnName": "authorStatsVideoCount",
+            "columnName": "authorStats.videoCount",
             "type": "number",
             "paths": [
                 "authorStats.videoCount",
@@ -134,7 +134,7 @@
             ]
         },
         {
-            "columnName": "contentsDesc",
+            "columnName": "contents[].desc",
             "type": "string[]",
             "paths": [
                 "contents[].desc",
@@ -146,7 +146,7 @@
             ]
         },
         {
-            "columnName": "musicAuthorName",
+            "columnName": "music.authorName",
             "type": "string",
             "paths": [
                 "music.authorName",
@@ -154,7 +154,7 @@
             ]
         },
         {
-            "columnName": "statsCollectCount",
+            "columnName": "stats.collectCount",
             "type": "number",
             "paths": [
                 "stats.collectCount",
@@ -164,7 +164,7 @@
             ]
         },
         {
-            "columnName": "statsCommentCount",
+            "columnName": "stats.commentCount",
             "type": "number",
             "paths": [
                 "stats.commentCount",
@@ -174,7 +174,7 @@
             ]
         },
         {
-            "columnName": "statsDiggCount",
+            "columnName": "stats.diggCount",
             "type": "number",
             "paths": [
                 "stats.diggCount",
@@ -184,7 +184,7 @@
             ]
         },
         {
-            "columnName": "statsPlayCount",
+            "columnName": "stats.playCount",
             "type": "number",
             "paths": [
                 "stats.playCount",
@@ -194,7 +194,7 @@
             ]
         },
         {
-            "columnName": "statsShareCount",
+            "columnName": "stats.shareCount",
             "type": "number",
             "paths": [
                 "stats.shareCount",

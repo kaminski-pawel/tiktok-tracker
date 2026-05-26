@@ -18,7 +18,7 @@ export interface CsvColumnSchemaConfig {
 export const DEFAULT_CSV_COLUMN_SCHEMA_CONFIG: CsvColumnSchemaConfig = {
     columns: [
         {
-            columnName: "videoId",
+            columnName: "id",
             type: "string",
             paths: ["id", "awemeId", "aweme_id", "itemId", "item_id"]
         },
@@ -33,22 +33,22 @@ export const DEFAULT_CSV_COLUMN_SCHEMA_CONFIG: CsvColumnSchemaConfig = {
             paths: ["isAd", "is_ad", "ad"]
         },
         {
-            columnName: "authorNickname",
+            columnName: "author.nickname",
             type: "string",
             paths: ["author.nickname", "author.nick_name"]
         },
         {
-            columnName: "authorPrivateAccount",
+            columnName: "author.privateAccount",
             type: "boolean",
             paths: ["author.privateAccount", "author.private_account"]
         },
         {
-            columnName: "authorUniqueId",
+            columnName: "author.uniqueId",
             type: "string",
             paths: ["author.uniqueId", "author.unique_id"]
         },
         {
-            columnName: "authorStatsDiggCount",
+            columnName: "authorStats.diggCount",
             type: "number",
             paths: [
                 "authorStats.diggCount",
@@ -60,7 +60,7 @@ export const DEFAULT_CSV_COLUMN_SCHEMA_CONFIG: CsvColumnSchemaConfig = {
             ]
         },
         {
-            columnName: "authorStatsFollowerCount",
+            columnName: "authorStats.followerCount",
             type: "number",
             paths: [
                 "authorStats.followerCount",
@@ -72,7 +72,7 @@ export const DEFAULT_CSV_COLUMN_SCHEMA_CONFIG: CsvColumnSchemaConfig = {
             ]
         },
         {
-            columnName: "authorStatsFollowingCount",
+            columnName: "authorStats.followingCount",
             type: "number",
             paths: [
                 "authorStats.followingCount",
@@ -84,7 +84,7 @@ export const DEFAULT_CSV_COLUMN_SCHEMA_CONFIG: CsvColumnSchemaConfig = {
             ]
         },
         {
-            columnName: "authorStatsFriendCount",
+            columnName: "authorStats.friendCount",
             type: "number",
             paths: [
                 "authorStats.friendCount",
@@ -96,12 +96,12 @@ export const DEFAULT_CSV_COLUMN_SCHEMA_CONFIG: CsvColumnSchemaConfig = {
             ]
         },
         {
-            columnName: "authorStatsHeart",
+            columnName: "authorStats.heart",
             type: "number",
             paths: ["authorStats.heart", "author_stats.heart", "author.stats.heart"]
         },
         {
-            columnName: "authorStatsHeartCount",
+            columnName: "authorStats.heartCount",
             type: "number",
             paths: [
                 "authorStats.heartCount",
@@ -113,7 +113,7 @@ export const DEFAULT_CSV_COLUMN_SCHEMA_CONFIG: CsvColumnSchemaConfig = {
             ]
         },
         {
-            columnName: "authorStatsVideoCount",
+            columnName: "authorStats.videoCount",
             type: "number",
             paths: [
                 "authorStats.videoCount",
@@ -125,7 +125,7 @@ export const DEFAULT_CSV_COLUMN_SCHEMA_CONFIG: CsvColumnSchemaConfig = {
             ]
         },
         {
-            columnName: "contentsDesc",
+            columnName: "contents[].desc",
             type: "string[]",
             paths: [
                 "contents[].desc",
@@ -137,32 +137,32 @@ export const DEFAULT_CSV_COLUMN_SCHEMA_CONFIG: CsvColumnSchemaConfig = {
             ]
         },
         {
-            columnName: "musicAuthorName",
+            columnName: "music.authorName",
             type: "string",
             paths: ["music.authorName", "music.author_name"]
         },
         {
-            columnName: "statsCollectCount",
+            columnName: "stats.collectCount",
             type: "number",
             paths: ["stats.collectCount", "stats.collect_count", "statistics.collectCount", "statistics.collect_count"]
         },
         {
-            columnName: "statsCommentCount",
+            columnName: "stats.commentCount",
             type: "number",
             paths: ["stats.commentCount", "stats.comment_count", "statistics.commentCount", "statistics.comment_count"]
         },
         {
-            columnName: "statsDiggCount",
+            columnName: "stats.diggCount",
             type: "number",
             paths: ["stats.diggCount", "stats.digg_count", "statistics.diggCount", "statistics.digg_count"]
         },
         {
-            columnName: "statsPlayCount",
+            columnName: "stats.playCount",
             type: "number",
             paths: ["stats.playCount", "stats.play_count", "statistics.playCount", "statistics.play_count"]
         },
         {
-            columnName: "statsShareCount",
+            columnName: "stats.shareCount",
             type: "number",
             paths: ["stats.shareCount", "stats.share_count", "statistics.shareCount", "statistics.share_count"]
         }

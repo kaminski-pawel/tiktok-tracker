@@ -19,6 +19,7 @@ export interface RuntimeConfig {
     launchTimeoutMs: number;
     enabledEndpointPaths: EndpointPath[];
     rawJsonArchiveRootDir: string;
+    csvOutputRootDir: string;
     csvColumnMappingConfigPath: string;
     chromePath?: string;
     chromeUserDataDir?: string;
@@ -29,6 +30,7 @@ const DEFAULT_DEBUG_PORT = 9222;
 const DEFAULT_LAUNCH_URL = "https://www.tiktok.com/";
 const DEFAULT_LAUNCH_TIMEOUT_MS = 15_000;
 const DEFAULT_RAW_JSON_ARCHIVE_ROOT_DIR = resolve(process.cwd(), "data", "raw-json-archive");
+const DEFAULT_CSV_OUTPUT_ROOT_DIR = resolve(process.cwd(), "data", "csv");
 const DEFAULT_CSV_COLUMN_MAPPING_CONFIG_PATH = resolve(
     process.cwd(),
     "config",
@@ -201,6 +203,8 @@ export function loadRuntimeConfig(env: NodeJS.ProcessEnv): RuntimeConfig {
     );
     const rawJsonArchiveRootDir =
         nonEmptyString(env["TRACKER_RAW_JSON_ARCHIVE_ROOT_DIR"]) ?? DEFAULT_RAW_JSON_ARCHIVE_ROOT_DIR;
+    const csvOutputRootDir =
+        nonEmptyString(env["TRACKER_CSV_OUTPUT_ROOT_DIR"]) ?? DEFAULT_CSV_OUTPUT_ROOT_DIR;
     const csvColumnMappingConfigPath =
         nonEmptyString(env["TRACKER_CSV_COLUMN_MAPPING_CONFIG_PATH"]) ??
         DEFAULT_CSV_COLUMN_MAPPING_CONFIG_PATH;
@@ -220,6 +224,7 @@ export function loadRuntimeConfig(env: NodeJS.ProcessEnv): RuntimeConfig {
         enabledEndpointPaths,
         launchTimeoutMs,
         rawJsonArchiveRootDir,
+        csvOutputRootDir,
         csvColumnMappingConfigPath
     };
 

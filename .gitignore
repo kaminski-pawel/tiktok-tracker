@@ -1,5 +1,6 @@
 node_modules/
 data/raw-json-archive
+data/csv
 dist/
 .env
 *.log

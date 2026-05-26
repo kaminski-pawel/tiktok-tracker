@@ -45,7 +45,7 @@ Build and maintain a Node.js + TypeScript tool that passively captures TikTok AP
    - `itemList[].contents[].desc`.
    - `itemList[].music.authorName`.
    - `itemList[].stats.collectCount`, `itemList[].stats.commentCount`, `itemList[].stats.diggCount`, `itemList[].stats.playCount`, `itemList[].stats.shareCount`.
-3. Metadata columns include: `capture_run_id`, `source_endpoint`, `request_url`, `first_seen_at_utc_plus_1`, `last_seen_at_utc_plus_1`.
+3. Metadata columns include: `capture_run_id`, `source_endpoint`, `request_url`, `fetched_at_utc+1`.
 
 ## Quality Gates (Always Enforced)
 
