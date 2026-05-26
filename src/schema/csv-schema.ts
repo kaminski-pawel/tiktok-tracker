@@ -38,11 +38,6 @@ export const DEFAULT_CSV_COLUMN_SCHEMA_CONFIG: CsvColumnSchemaConfig = {
             paths: ["author.nickname", "author.nick_name"]
         },
         {
-            columnName: "author.privateAccount",
-            type: "boolean",
-            paths: ["author.privateAccount", "author.private_account"]
-        },
-        {
             columnName: "author.uniqueId",
             type: "string",
             paths: ["author.uniqueId", "author.unique_id"]
@@ -82,23 +77,6 @@ export const DEFAULT_CSV_COLUMN_SCHEMA_CONFIG: CsvColumnSchemaConfig = {
                 "author.stats.followingCount",
                 "author.stats.following_count"
             ]
-        },
-        {
-            columnName: "authorStats.friendCount",
-            type: "number",
-            paths: [
-                "authorStats.friendCount",
-                "authorStats.friend_count",
-                "author_stats.friendCount",
-                "author_stats.friend_count",
-                "author.stats.friendCount",
-                "author.stats.friend_count"
-            ]
-        },
-        {
-            columnName: "authorStats.heart",
-            type: "number",
-            paths: ["authorStats.heart", "author_stats.heart", "author.stats.heart"]
         },
         {
             columnName: "authorStats.heartCount",

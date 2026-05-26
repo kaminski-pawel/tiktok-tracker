@@ -37,14 +37,6 @@
             ]
         },
         {
-            "columnName": "author.privateAccount",
-            "type": "boolean",
-            "paths": [
-                "author.privateAccount",
-                "author.private_account"
-            ]
-        },
-        {
             "columnName": "author.uniqueId",
             "type": "string",
             "paths": [
@@ -86,27 +78,6 @@
                 "author_stats.following_count",
                 "author.stats.followingCount",
                 "author.stats.following_count"
-            ]
-        },
-        {
-            "columnName": "authorStats.friendCount",
-            "type": "number",
-            "paths": [
-                "authorStats.friendCount",
-                "authorStats.friend_count",
-                "author_stats.friendCount",
-                "author_stats.friend_count",
-                "author.stats.friendCount",
-                "author.stats.friend_count"
-            ]
-        },
-        {
-            "columnName": "authorStats.heart",
-            "type": "number",
-            "paths": [
-                "authorStats.heart",
-                "author_stats.heart",
-                "author.stats.heart"
             ]
         },
         {

@@ -90,7 +90,6 @@ test("extracts row candidates from standard and variant itemList payloads", () =
 
     assert.equal(rowCandidates[1].id, "987654");
     assert.equal(rowCandidates[1].isAd, true);
-    assert.equal(rowCandidates[1]["author.privateAccount"], true);
     assert.equal(rowCandidates[1]["authorStats.followerCount"], 200);
     assert.deepEqual(rowCandidates[1]["contents[].desc"], ["fallback-content"]);
     assert.equal(rowCandidates[1]["stats.shareCount"], 55);

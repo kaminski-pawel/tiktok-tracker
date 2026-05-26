@@ -66,8 +66,8 @@ Output structure:
 Default CSV headers:
 
 - `id`, `desc`, `isAd`
-- `author.nickname`, `author.privateAccount`, `author.uniqueId`
-- `authorStats.diggCount`, `authorStats.followerCount`, `authorStats.followingCount`, `authorStats.friendCount`, `authorStats.heart`, `authorStats.heartCount`, `authorStats.videoCount`
+- `author.nickname`, `author.uniqueId`
+- `authorStats.diggCount`, `authorStats.followerCount`, `authorStats.followingCount`, `authorStats.heartCount`, `authorStats.videoCount`
 - `contents[].desc`
 - `music.authorName`
 - `stats.collectCount`, `stats.commentCount`, `stats.diggCount`, `stats.playCount`, `stats.shareCount`

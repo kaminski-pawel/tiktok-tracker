@@ -40,8 +40,8 @@ Build and maintain a Node.js + TypeScript tool that passively captures TikTok AP
 1. CSV columns must be configurable via a mapping file, not hard-coded throughout the codebase.
 2. Default seeded field mappings must include:
    - `itemList[].id`, `itemList[].desc`, `itemList[].isAd`.
-   - `itemList[].author.nickname`, `itemList[].author.privateAccount`, `itemList[].author.uniqueId`.
-   - `itemList[].authorStats.diggCount`, `itemList[].authorStats.followerCount`, `itemList[].authorStats.followingCount`, `itemList[].authorStats.friendCount`, `itemList[].authorStats.heart`, `itemList[].authorStats.heartCount`, `itemList[].authorStats.videoCount`.
+   - `itemList[].author.nickname`, `itemList[].author.uniqueId`.
+   - `itemList[].authorStats.diggCount`, `itemList[].authorStats.followerCount`, `itemList[].authorStats.followingCount`, `itemList[].authorStats.heartCount`, `itemList[].authorStats.videoCount`.
    - `itemList[].contents[].desc`.
    - `itemList[].music.authorName`.
    - `itemList[].stats.collectCount`, `itemList[].stats.commentCount`, `itemList[].stats.diggCount`, `itemList[].stats.playCount`, `itemList[].stats.shareCount`.
